@@ -21,6 +21,9 @@ const ItemCtrl = (function () { //Set variable to iffy(immediate invoked functio
     }
     //return para poder ver la data desde el browser (Public methods)
     return{
+        getItems: function () {
+            return data.items;
+        },
         logData: function(){
             return data;
         }
@@ -30,10 +33,26 @@ const ItemCtrl = (function () { //Set variable to iffy(immediate invoked functio
 
 //UI Controller
 const UICtrl = (function () { //Set variable to iffy(immediate invoked function)
-
+    //Object with the id of the list items
+    const UISelectors = {
+        itemList: '#item-list'
+    }
     //Public methods
     return {
+        showItemList: function(items){
+            let html = '';
 
+            items.forEach(item => {
+                html += `<li id="item-${item.id}" class="collection-item">
+                            <strong>${item.name}: </strong><em>${item.calories} Calories</em>
+                            <a href="#" class="secondary-content">
+                                <i class="edit-item fa fa-pencil"></i>
+                            </a>
+                         </li>`
+            });
+            //Insert list items in the ul
+            document.querySelector(UISelectors.itemList).innerHTML= html;
+        }
     }
     
 })();
@@ -45,6 +64,11 @@ const App = (function (ItemCtrl, UICtrl) { //Set variable to iffy(immediate invo
     return {
         init: function(){
             console.log('Initializing app');
+            //Fetch items from data structure
+            const items = ItemCtrl.getItems();
+
+            //Populate list with items
+            UICtrl.showItemList(items);
         }
     }
 })(ItemCtrl, UICtrl);
