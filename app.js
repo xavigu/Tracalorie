@@ -53,6 +53,21 @@ const ItemCtrl = (function () { //Set variable to iffy(immediate invoked functio
             });
             return found;
         },
+        updateItem: function(name, calories) {
+            //Calories to number
+            calories = parseInt(calories);
+
+            let found = null;
+
+            data.items.forEach(item => {
+                if (item.id === data.currentItem.id) { //compara con el current id porque cuando das al pencil de editar ese item pasa a ser el currentItem
+                  item.name = name;
+                  item.calories = calories;
+                  found = item;
+                }
+            });
+            return found; //Se devuelve el item ya updateado(editado)
+        },
         getCurrentItem: function() {
             return data.currentItem;
         },
@@ -81,6 +96,7 @@ const UICtrl = (function () { //Set variable to iffy(immediate invoked function)
     //Object with the id of the list items
     const UISelectors = {
         itemList: '#item-list',
+        listItems: '#item-list li',
         addBtn: '.add-btn',
         updateBtn: '.update-btn',
         deleteBtn: '.delete-btn',
@@ -136,11 +152,29 @@ const UICtrl = (function () { //Set variable to iffy(immediate invoked function)
         },
         //Show Edit State
         showEditState: function() {
-            UICtrl.clearInputs();
             document.querySelector(UISelectors.updateBtn).style.display = 'inline';
             document.querySelector(UISelectors.deleteBtn).style.display = 'inline';
             document.querySelector(UISelectors.backBtn).style.display = 'inline';
             document.querySelector(UISelectors.addBtn).style.display = 'none';
+        },
+        //Update UI with the new update item
+        updateListItem: function(updatedItem) {
+            let listItems = document.querySelectorAll(UISelectors.listItems); //Devuelve un NodeList y no se puede hacer un foreach, hay que pasarlo a array
+            //Convert NodeList into Array
+            listItems = Array.from(listItems);
+
+            listItems.forEach(item => {
+                const itemID = item.getAttribute('id');
+
+                if (itemID === `item-${updatedItem.id}`) {
+                    document.querySelector(`#${itemID}`).innerHTML = `
+                        <strong>${updatedItem.name}: </strong><em>${updatedItem.calories} Calories</em>
+                            <a href="#" class="secondary-content">
+                                <i class="edit-item fa fa-pencil"></i>
+                            </a>
+                        `
+                }
+            });
         },
         //Add item in the inputs to edit
         addItemToForm: function() {
@@ -185,8 +219,22 @@ const App = (function (ItemCtrl, UICtrl) { //Set variable to iffy(immediate invo
         //Add item event
         document.querySelector(UISelectors.addBtn).addEventListener('click', itemAddSubmit);
 
+        //Disable submit on enter (quitar la posibilidad de submit un item(para añadir o editar) dando a la tecle enter)
+        document.addEventListener('keypress', function(e) {
+            if (e.keyCode === 13 || e.which === 13) {
+              e.preventDefault();
+              return false;
+            }
+        });
+
         //Edit icon event
-        document.querySelector(UISelectors.itemList).addEventListener('click', itemUpdateSubmit);
+        document.querySelector(UISelectors.itemList).addEventListener('click', itemEditClick);
+
+        //Back button click event
+        document.querySelector(UISelectors.backBtn).addEventListener('click', UICtrl.clearEditState);
+
+        //Update item event
+        document.querySelector(UISelectors.updateBtn).addEventListener('click', itemUpdateSubmit);
 
     }
 
@@ -217,8 +265,8 @@ const App = (function (ItemCtrl, UICtrl) { //Set variable to iffy(immediate invo
         e.preventDefault();
     }
 
-    //Update item submit
-    const itemUpdateSubmit = function(e) {
+    //Edit state of an item when you click edit button
+    const itemEditClick = function(e) {
         if (e.target.classList.contains('edit-item')) {
             //Get list item id (item-0, item-1...)
             const listId = e.target.parentNode.parentNode.id;
@@ -238,6 +286,27 @@ const App = (function (ItemCtrl, UICtrl) { //Set variable to iffy(immediate invo
             // Add item to edit in the form
             UICtrl.addItemToForm();
         }
+
+        e.preventDefault();
+    }
+
+    //Update item submit with update button
+    const itemUpdateSubmit = function(e) {
+        //Get item input
+        const input = UICtrl.getItemInput();
+        
+        //Update item
+        const updatedItem = ItemCtrl.updateItem(input.name, input.calories);
+
+        //Update UI with the updated item
+        UICtrl.updateListItem(updatedItem);
+
+        //Update total calories
+        const totalCalories = ItemCtrl.getTotalCalories();
+        //Add total calories to UI
+        UICtrl.showTotalCalories(totalCalories);
+        //Clear Edit State
+        UICtrl.clearEditState();
 
         e.preventDefault();
     }
