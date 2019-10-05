@@ -68,6 +68,22 @@ const ItemCtrl = (function () { //Set variable to iffy(immediate invoked functio
             });
             return found; //Se devuelve el item ya updateado(editado)
         },
+        deleteItem: function(id) {
+            //Get IDs of all data
+            const ids = data.items.map(function(item) {
+                return item.id;
+            });
+
+            //Get index 
+            const index = ids.indexOf(id); //recoge de la variable el que tenga el mismo id
+
+            //Remove item
+            data.items.splice(index, 1); //quita del array el elemento index y el 1 que solamente el primero
+        },
+        clearListItems: function() {
+            //Remove all items for data structure
+            data.items = [];
+        },
         getCurrentItem: function() {
             return data.currentItem;
         },
@@ -100,8 +116,8 @@ const UICtrl = (function () { //Set variable to iffy(immediate invoked function)
         addBtn: '.add-btn',
         updateBtn: '.update-btn',
         deleteBtn: '.delete-btn',
-        deleteBtn: '.delete-btn',
         backBtn: '.back-btn',
+        clearBtn: '.clear-btn',
         itemNameInput: '#item-name',
         itemCaloriesInput: '#item-calories',
         totalCaloriesInput: '.total-calories'
@@ -176,6 +192,22 @@ const UICtrl = (function () { //Set variable to iffy(immediate invoked function)
                 }
             });
         },
+        //Delete item from the UI
+        deleteListItem: function(id) {
+            const itemID = `#item-${id}`;
+            const itemDeleted = document.querySelector(itemID);
+            itemDeleted.remove();
+        },
+        //Remove all items from the UI
+        removeItems: function() {
+            let listItems = document.querySelectorAll(UISelectors.listItems);
+            //Turn Node List into an array
+            listItems = Array.from(listItems);
+
+            listItems.forEach(item => {
+                item.remove();
+            });
+        },
         //Add item in the inputs to edit
         addItemToForm: function() {
             document.querySelector(UISelectors.itemNameInput).value = ItemCtrl.getCurrentItem().name;
@@ -236,6 +268,12 @@ const App = (function (ItemCtrl, UICtrl) { //Set variable to iffy(immediate invo
         //Update item event
         document.querySelector(UISelectors.updateBtn).addEventListener('click', itemUpdateSubmit);
 
+        //Delete item event
+        document.querySelector(UISelectors.deleteBtn).addEventListener('click', itemDeleteSubmit);
+
+        //Clear All button click event
+        document.querySelector(UISelectors.clearBtn).addEventListener('click', clearAllItems);
+
     }
 
     //Add item submit
@@ -251,10 +289,8 @@ const App = (function (ItemCtrl, UICtrl) { //Set variable to iffy(immediate invo
             //Add item to UI list
             UICtrl.addListItem(newItem);
 
-            //Get total calories
-            const totalCalories = ItemCtrl.getTotalCalories();
-            //Add total calories to UI
-            UICtrl.showTotalCalories(totalCalories);
+            //Refresh Total Calories
+            updateTotalCalories();
 
             //Clear fields input
             UICtrl.clearInputs();
@@ -301,14 +337,60 @@ const App = (function (ItemCtrl, UICtrl) { //Set variable to iffy(immediate invo
         //Update UI with the updated item
         UICtrl.updateListItem(updatedItem);
 
-        //Update total calories
-        const totalCalories = ItemCtrl.getTotalCalories();
-        //Add total calories to UI
-        UICtrl.showTotalCalories(totalCalories);
+        //Refresh Total Calories
+        updateTotalCalories();
+
         //Clear Edit State
         UICtrl.clearEditState();
 
         e.preventDefault();
+    }
+
+    //Delete item submit with delete button
+    const itemDeleteSubmit = function(e) {
+        //Get current item
+        const currentItem = ItemCtrl.getCurrentItem();
+        
+        //Delete from data structure
+        ItemCtrl.deleteItem(currentItem.id);
+
+        //Delete from UI
+        UICtrl.deleteListItem(currentItem.id)
+
+        //Refresh Total Calories
+        updateTotalCalories();
+
+        //Clear Edit State
+        UICtrl.clearEditState();
+
+        e.preventDefault();
+    }
+
+    //Clear All items button event
+    const clearAllItems = function() {   
+        //Delete all items from data structure
+        ItemCtrl.clearListItems();
+
+        //Remove from UI
+        UICtrl.removeItems();
+
+        //Refresh Total Calories
+        updateTotalCalories();
+
+        //Clear Edit State
+        UICtrl.clearEditState();
+
+        //Hide <ul>
+        UICtrl.hideList();
+
+    }
+
+    //Update Total Calories 
+    const updateTotalCalories = function() {
+        //Update total calories
+        const totalCalories = ItemCtrl.getTotalCalories();
+        //Add total calories to UI
+        UICtrl.showTotalCalories(totalCalories);
     }
 
     //Public methods
@@ -329,11 +411,8 @@ const App = (function (ItemCtrl, UICtrl) { //Set variable to iffy(immediate invo
                 //Populate list with items
                 UICtrl.showItemList(items);
             }
-
-            //Get total calories
-            const totalCalories = ItemCtrl.getTotalCalories();
-            //Add total calories to UI
-            UICtrl.showTotalCalories(totalCalories);
+            //Total Calories
+            updateTotalCalories();
 
             //Load event listeners
             loadEventListeners();
