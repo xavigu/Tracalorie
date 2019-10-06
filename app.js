@@ -1,4 +1,38 @@
 //Storage Controller
+const StorageCtrl = (function() { //Set variable to iffy(immediate invoked function)
+
+    //Public methods
+    return {
+        //Add the new item to the Local Storage
+        storeItem: function(item){
+            let items; //Local Storage solo puede recoger string por defecto
+            //Check if any items in Local Storage
+            if (localStorage.getItem('items') === null) {
+                items = [];
+                //Push new item
+                items.push(item);
+                //Set in localStorage
+                localStorage.setItem('items', JSON.stringify(items));
+            } else {
+                //Recoger el contenido que es un string en el LocalStorage a un object
+                items = JSON.parse(localStorage.getItem('items'));
+                items.push(item);
+                localStorage.setItem('items', JSON.stringify(items));
+            }
+        },
+        //Get all the items from the Local Storage
+        getItemsLS: function() {
+            let items;
+            if (localStorage.getItem('items') === null) {
+                items = [];
+            } else {
+                items = JSON.parse(localStorage.getItem('items'));
+            }
+            return items;
+        }
+    }
+        
+})();
 
 //Item Controller
 const ItemCtrl = (function () { //Set variable to iffy(immediate invoked function)
@@ -11,11 +45,12 @@ const ItemCtrl = (function () { //Set variable to iffy(immediate invoked functio
 
     //Data structure / State
     const data = {
-        items: [
-            { id: 0, name: 'Steak Dinner', calories: 1200 },
-            { id: 1, name: 'Eggs', calories: 600 },
-            { id: 2, name: 'Fish', calories: 800 }
-        ],
+        // items: [ //Previous items before get from Local Storage
+        //     { id: 0, name: 'Steak Dinner', calories: 1200 },
+        //     { id: 1, name: 'Eggs', calories: 600 },
+        //     { id: 2, name: 'Fish', calories: 800 }
+        // ],
+        items: StorageCtrl.getItemsLS(),
         currentItem: null, //Variable que se utilizara cuando un item quiere ser updated (editado)
         totalCalories: 0
     }
@@ -242,7 +277,7 @@ const UICtrl = (function () { //Set variable to iffy(immediate invoked function)
 
 
 //App Controller
-const App = (function (ItemCtrl, UICtrl) { //Set variable to iffy(immediate invoked function)
+const App = (function (ItemCtrl, StorageCtrl, UICtrl) { //Set variable to iffy(immediate invoked function)
     //Load event listeners
     const loadEventListeners = function () {
         //Get UI Selectors
@@ -291,6 +326,9 @@ const App = (function (ItemCtrl, UICtrl) { //Set variable to iffy(immediate invo
 
             //Refresh Total Calories
             updateTotalCalories();
+
+            //Store item in Local Storage
+            StorageCtrl.storeItem(newItem);
 
             //Clear fields input
             UICtrl.clearInputs();
@@ -418,7 +456,7 @@ const App = (function (ItemCtrl, UICtrl) { //Set variable to iffy(immediate invo
             loadEventListeners();
         }
     }
-})(ItemCtrl, UICtrl);
+})(ItemCtrl, StorageCtrl, UICtrl);
 
 //Initialize app
 App.init();
