@@ -20,6 +20,30 @@ const StorageCtrl = (function() { //Set variable to iffy(immediate invoked funct
                 localStorage.setItem('items', JSON.stringify(items));
             }
         },
+        //Update the LS with the new update item
+        updateItemLS: function(updatedItem) {
+            let items = JSON.parse(localStorage.getItem('items'));
+            items.forEach((item, index) => {
+                if (updatedItem.id === item.id) {
+                    items.splice(index, 1, updatedItem); //Eliminar en esa posicion 1 item y reemplazarlo por el udpatedItem
+                }
+            });
+            localStorage.setItem('items', JSON.stringify(items));
+        },
+        //Delete item from the Local Storage
+        deleteItemLS: function(id) {
+            let items = JSON.parse(localStorage.getItem('items'));
+            items.forEach((item, index) => {
+                if (id === item.id) {
+                    items.splice(index, 1);
+                }
+            });
+            localStorage.setItem('items', JSON.stringify(items));
+        },
+        //Delete all the items from the Local Storage
+        clearItemsLS: function() {
+           localStorage.removeItem('items');
+        },
         //Get all the items from the Local Storage
         getItemsLS: function() {
             let items;
@@ -29,7 +53,7 @@ const StorageCtrl = (function() { //Set variable to iffy(immediate invoked funct
                 items = JSON.parse(localStorage.getItem('items'));
             }
             return items;
-        }
+        },
     }
         
 })();
@@ -378,6 +402,9 @@ const App = (function (ItemCtrl, StorageCtrl, UICtrl) { //Set variable to iffy(i
         //Refresh Total Calories
         updateTotalCalories();
 
+        //Update local Storage
+        StorageCtrl.updateItemLS(updatedItem);
+
         //Clear Edit State
         UICtrl.clearEditState();
 
@@ -398,6 +425,9 @@ const App = (function (ItemCtrl, StorageCtrl, UICtrl) { //Set variable to iffy(i
         //Refresh Total Calories
         updateTotalCalories();
 
+        //Delete item from Local Storage
+        StorageCtrl.deleteItemLS(currentItem.id);
+
         //Clear Edit State
         UICtrl.clearEditState();
 
@@ -414,6 +444,9 @@ const App = (function (ItemCtrl, StorageCtrl, UICtrl) { //Set variable to iffy(i
 
         //Refresh Total Calories
         updateTotalCalories();
+
+        //Clear all items from Local Storage
+        StorageCtrl.clearItemsLS();
 
         //Clear Edit State
         UICtrl.clearEditState();
@@ -456,7 +489,7 @@ const App = (function (ItemCtrl, StorageCtrl, UICtrl) { //Set variable to iffy(i
             loadEventListeners();
         }
     }
-})(ItemCtrl, StorageCtrl, UICtrl);
+})(ItemCtrl, StorageCtrl, UICtrl); //Controllers de los que hace uso el controller principal
 
 //Initialize app
 App.init();
